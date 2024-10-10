@@ -61,11 +61,6 @@ Isso criará mais instâncias dos containers de backend, e o Nginx irá balancea
 2. Para adivinhar a senha, entre com o game_id que foi gerado no passo acima e tente adivinhar.
 3. Toda vez que você interagir com o jogo, o Nginx irá redirecionar sua requisição para um dos containers de backend rodando no ambiente.
    
-### Testar o balanceamento de carga
-
-- Cada requisição ao backend é balanceada entre múltiplos containers. Se você abrir a aba do desenvolvedor no seu navegador (normalmente pressionando `F12`), poderá observar o tráfego de rede sendo distribuído.
-- O comportamento pode ser testado ao abrir várias abas ou acessando repetidamente a aplicação.
-
 ## Encerrando o Jogo
 
 Para parar todos os containers e excluir os volumes, executar:
@@ -75,3 +70,32 @@ docker compose down --volumes
 ```
 
 Isso irá desligar e remover todos os containers criados.
+
+
+# Decisões de Design da Aplicação
+
+O foco foi em criar uma aplicação escalável, eficiente e fácil de manter, utilizando Docker, Docker Compose e Nginx para balanceamento de carga.
+
+- **Isolamento**: Cada serviço (backend e proxy) é isolado em seu próprio container, evitando conflitos de dependências e facilitando o gerenciamento. As placas de rede também são isoladas (fora o necessário para comunicação).
+- **Portabilidade**: Os containers garantem que a aplicação rodará da mesma maneira em qualquer ambiente, seja de desenvolvimento, testes ou produção, sem dependências externas além do Docker.
+- **Escalabilidade**: Com o Docker, é fácil aumentar o número de instâncias de qualquer serviço, permitindo escalar a aplicação horizontalmente conforme a demanda. Foram usados 2 backends por padrão no docker-compose.yml (backend1 e backend2).
+
+Utilizamos o Docker Compose para **orquestrar** os containers. Ele facilita a definição, deploy e gerenciamento dos serviços da aplicação em um único arquivo (`docker-compose.yml`).
+
+- **Multicontainers**: A aplicação utiliza múltiplos containers de backend, e o Docker Compose coordena a criação e conexão desses containers com outros serviços, como o Nginx.
+- **Redundância**: O uso de múltiplos containers backend permite redundância, melhorando a resiliência e disponibilidade.
+
+O **Nginx** foi escolhido para desempenhar o papel de proxy reverso e balanceador de carga.
+
+- **Proxy reverso**: O Nginx recebe todas as requisições e as redireciona para os backends, mantendo a arquitetura modular e protegendo os serviços internos.
+- **Balanceamento de carga**: Distribui as requisições entre múltiplos containers backend, garantindo que nenhum deles seja sobrecarregado, o que melhora a performance e resiliência.
+
+Utilizei o bloco `upstream` no arquivo `default.conf` do nginx para definir múltiplos servidores backend, facilitando o balanceamento de carga entre eles. O Nginx distribui as requisições de maneira circular por padrão entre os servidores backend (fonte: https://medium.com/@aedemirsen/load-balancing-with-docker-compose-and-nginx-b9077696f624).
+
+A aplicação foi projetada para ser **escalável horizontalmente**, adicionando mais containers de backend conforme necessário. Isso é feito através do Docker Compose com um comando simples:
+
+```bash
+docker-compose up --scale backend1=3 --scale backend2=3
+```
+
+Essa flexibilidade permite que a aplicação lide com aumentos de tráfego sem comprometer a performance.
