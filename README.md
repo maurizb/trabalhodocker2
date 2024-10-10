@@ -1,155 +1,77 @@
-Aqui está um exemplo de um arquivo `README.md` para o seu jogo:
 
----
+Jogo Multiplayer de senha
 
-# Jogo de Adivinhação com Flask
+Este projeto é um jogo multiplayer simples rodando em containers Docker. O jogador deve adivinhar uma senha criada aleatoriamente, e o sistema fornecerá feedback sobre o número de letras corretas e suas respectivas posições.
 
-Este é um simples jogo de adivinhação desenvolvido utilizando o framework Flask. O jogador deve adivinhar uma senha criada aleatoriamente, e o sistema fornecerá feedback sobre o número de letras corretas e suas respectivas posições.
+## Requisitos
+
+Antes de começar, certifique-se de que você tem as seguintes ferramentas instaladas:
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 ## Funcionalidades
 
-- Criação de um novo jogo com uma senha fornecida pelo usuário.
-- Adivinhe a senha e receba feedback se as letras estão corretas e/ou em posições corretas.
-- As senhas são armazenadas  utilizando base64.
-- As adivinhações incorretas retornam uma mensagem com dicas.
-  
-## Requisitos
-
-- Python 3.8+
-- Flask
-- Um banco de dados local (ou um mecanismo de armazenamento configurado em `current_app.db`)
-- node 18.17.0
+Utilizamos **Docker Compose** para criar múltiplos containers de backend para balanceamento. O objetivo é distribuir as requisições entre diferentes instâncias do backend.
 
 ## Instalação
 
-1. Clone o repositório:
+Siga os passos abaixo para instalar e rodar o projeto em sua máquina:
 
-   ```bash
-   git clone https://github.com/fams/guess_game.git
-   cd guess-game
-   ```
+### 1. Clone o repositório
 
-2. Crie um ambiente virtual e ative-o:
+```bash
+git clone https://github.com/maurizb/trabalhodocker2.git
+cd trabalhodocker2
+```
 
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate  # Windows
-   ```
+### 2. Verifique e ajuste as configurações
 
-3. Instale as dependências:
+O arquivo `docker-compose.yml` e o arquivo de configuração do Nginx (`nginx.conf`) já estão configurados para o balanceamento de carga (**NÃO IMPLEMENTADO**).
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+- O `docker-compose.yml` define dois containers de backend (`backend1` e `backend2`) rodando a mesma aplicação. (**NO MOMENTO APENAS UM**).
+- O arquivo `nginx.conf` define a configuração do proxy reverso para distribuir as requisições entre os containers.
 
-4. Configure o banco de dados com as variáveis de ambiente no arquivo start-backend.sh
-    1. Para sqlite
+Se quiser, ajuste as configurações de portas, número de containers, ou outras variáveis.
 
-        ```bash
-            export FLASK_APP="run.py"
-            export FLASK_DB_TYPE="sqlite"            # Use SQLITE
-            export FLASK_DB_PATH="caminho/db.sqlite" # caminho do banco
-        ```
+### 3. Rodar o projeto
 
-    2. Para Postgres
+Para rodar o projeto, utilize o seguinte comando:
 
-        ```bash
-            export FLASK_APP="run.py"
-            export FLASK_DB_TYPE="postgres"       # Use postgres
-            export FLASK_DB_USER="postgres"       # Usuário do banco
-            export FLASK_DB_NAME="postgres"       # Nome do Banco
-            export FLASK_DB_PASSWORD="secretpass" # Senha do banco
-            export FLASK_DB_HOST="localhost"      # Hostname
-            export FLASK_DB_PORT="5432"           # Porta
-        ```
+```bash
+docker-compose up --build
+```
 
-    3. Para DynamoDB
+Isso irá construir as imagens e subir os containers do jogo. A aplicação estará disponível em [http://localhost](http://localhost).
 
-        ```bash
-        export FLASK_APP="run.py"
-        export FLASK_DB_TYPE="dynamodb"       # Use postgres
-        export AWS_DEFAULT_REGION="us-east-1" # AWS region
-        export AWS_ACCESS_KEY_ID="FAKEACCESSKEY123456" 
-        export AWS_SECRET_ACCESS_KEY="FakeSecretAccessKey987654321"
-        export AWS_SESSION_TOKEN="FakeSessionTokenABCDEFGHIJKLMNOPQRSTUVXYZ1234567890"
-        ```
+### 4. Escalar o backend (opcional)
 
-5. Execute o backend
+Se você quiser aumentar o número de containers backend rodando o jogo, pode usar o seguinte comando para escalar:
 
-   ```bash
-   ./start-backend.sh &
-   ```
+```bash
+docker-compose up --scale backend1=3 --scale backend2=3
+```
 
-## Frontend
-No diretorio de frontend
-
-1. Instale o node com o nvm. Se não tiver o nvm instalado, siga o [tutorial](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
-
-    ```bash
-    nvm install 18.17.0
-    nvm use 18.17.0
-    # Habilite o yarn
-    corepack enable
-    ```
-
-2. Instale as dependências do node com o npm:
-
-    ```bash
-    npm install
-    ```
-
-3. Exporte a url onde está executando o backend e execute o backend.
-
-   ```bash
-    export REACT_APP_BACKEND_URL=http://localhost:5000
-    yarn start
-   ```
+Isso criará mais instâncias dos containers de backend, e o Nginx irá balancear a carga entre eles.
 
 ## Como Jogar
 
-### 1. Criar um novo jogo
+1. Abra o navegador e acesse [http://localhost](http://localhost). Digite uma frase secreta, envie, e salve o game-id.
 
-Acesse a url do frontend http://localhost:3000
+2. Para adivinhar a senha, entre com o game_id que foi gerado no passo acima e tente adivinhar.
+3. Toda vez que você interagir com o jogo, o Nginx irá redirecionar sua requisição para um dos containers de backend rodando no ambiente.
+   
+### Testar o balanceamento de carga
 
-Digite uma frase secreta
+- Cada requisição ao backend é balanceada entre múltiplos containers. Se você abrir a aba do desenvolvedor no seu navegador (normalmente pressionando `F12`), poderá observar o tráfego de rede sendo distribuído.
+- O comportamento pode ser testado ao abrir várias abas ou acessando repetidamente a aplicação.
 
-Envie
+## Encerrando o Jogo
 
-Salve o game-id
+Para parar todos os containers e excluir os volumes, executar:
 
+```bash
+docker compose down --volumes
+```
 
-### 2. Adivinhar a senha
-
-Acesse a url do frontend http://localhost:3000
-
-Vá para o endponint breaker
-
-entre com o game_id que foi gerado pelo Creator
-
-Tente adivinhar
-
-## Estrutura do Código
-
-### Rotas:
-
-- **`/create`**: Cria um novo jogo. Armazena a senha codificada em base64 e retorna um `game_id`.
-- **`/guess/<game_id>`**: Permite ao usuário adivinhar a senha. Compara a adivinhação com a senha armazenada e retorna o resultado.
-
-### Classes Importantes:
-
-- **`Guess`**: Classe responsável por gerenciar a lógica de comparação entre a senha e a tentativa do jogador.
-- **`WrongAttempt`**: Exceção personalizada que é levantada quando a tentativa está incorreta.
-
-
-
-## Melhorias Futuras
-
-- Implementar autenticação de usuário para salvar e carregar jogos.
-- Adicionar limite de tentativas.
-- Melhorar a interface de feedback para as tentativas de adivinhação.
-
-## Licença
-
-Este projeto está licenciado sob a [MIT License](LICENSE).
-
+Isso irá desligar e remover todos os containers criados.
