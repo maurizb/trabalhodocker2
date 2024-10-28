@@ -27,9 +27,9 @@ cd trabalhodocker2
 
 ### 2. Verifique e ajuste as configurações
 
-O arquivo `docker-compose.yml` e o arquivo de configuração do Nginx (`nginx.conf`) já estão configurados para o balanceamento de carga (**NÃO IMPLEMENTADO**).
+O arquivo `docker-compose.yml` e o arquivo de configuração do Nginx (`nginx.conf`) já estão configurados para o balanceamento de carga.
 
-- O `docker-compose.yml` define dois containers de backend (`backend1` e `backend2`) rodando a mesma aplicação. (**NO MOMENTO APENAS UM**).
+- O `docker-compose.yml` define dois containers de backend (`backend1` e `backend2`) rodando a mesma aplicação.
 - O arquivo `nginx.conf` define a configuração do proxy reverso para distribuir as requisições entre os containers.
 
 Se quiser, ajuste as configurações de portas, número de containers, ou outras variáveis.
